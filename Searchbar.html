@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Bar with Auto-Suggestions</title>
+    <style>
+        /* Base styles */
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #a04acb;
+            color: #333;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        body.dark-mode {
+            background-color: #1a1a1a;
+            color: #f0f4f8;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
+            padding: 20px;
+            background-color: #ba9fe5;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .dark-mode .container {
+            background-color: #2c3e50;
+            color: #f0f4f8;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: #35054b;
+        }
+
+        .dark-mode h1 {
+            color: #f0f4f8;
+        }
+
+        .search-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        #searchInput {
+            width: 100%;
+            padding: 10px 10px 10px 40px; /* Add padding for the search icon */
+            font-size: 1rem;
+            border: 5px solid #532dde;
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.3s ease;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232c3e50' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3ccircle cx='11' cy='11' r='8'%3e%3c/circle%3e%3cpath d='M21 21l-4.35-4.35'%3e%3c/path%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: 10px center;
+            background-size: 20px;
+        }
+
+        #searchInput:focus {
+            border-color: #2c3e50;
+        }
+
+        .dark-mode #searchInput {
+            background-color: #2c3e50;
+            color: #f0f4f8;
+            border-color: #444;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f0f4f8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3ccircle cx='11' cy='11' r='8'%3e%3c/circle%3e%3cpath d='M21 21l-4.35-4.35'%3e%3c/path%3e%3c/svg%3e");
+        }
+
+        .suggestions-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            max-height: 200px;
+            overflow-y: auto;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: none;
+            z-index: 10;
+        }
+
+        .dark-mode .suggestions-dropdown {
+            background-color: #2c3e50;
+            border-color: #444;
+            color: #f0f4f8;
+        }
+
+        .suggestion-item {
+            padding: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .suggestion-item:hover {
+            background-color: #f0f4f8;
+        }
+
+        .dark-mode .suggestion-item:hover {
+            background-color: #34495e;
+        }
+
+        .highlight {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .dark-mode .highlight {
+            color: #f0f4f8;
+        }
+
+        /* Dark mode toggle button */
+        .toggle-dark-mode {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #2c3e50;
+            color: #f0f4f8;
+            border: none;
+            padding: 8px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+        }
+
+        .dark-mode .toggle-dark-mode {
+            background-color: #f0f4f8;
+            color: #2c3e50;
+        }
+
+        .toggle-dark-mode:hover {
+            background-color: #34495e;
+            transform: rotate(180deg);
+        }
+
+        .dark-mode .toggle-dark-mode:hover {
+            background-color: #e0e4e8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Search Bar </h1>
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Search for items...">
+            <div id="suggestionsDropdown" class="suggestions-dropdown"></div>
+        </div>
+        <button class="toggle-dark-mode" onclick="toggleDarkMode()">🌙</button>
+    </div>
+
+    <script>
+        // Predefined list of suggestions
+        const suggestions = [
+            "Apple",
+            "Banana",
+            "Cherry",
+            "Date",
+            "Elderberry",
+            "Fig",
+            "Grape",
+            "Honeydew",
+            "Kiwi",
+            "Lemon",
+            "Mango",
+            "Nectarine",
+            "Orange",
+            "Papaya",
+            "Quince",
+            "Raspberry",
+            "Strawberry",
+            "Tangerine",
+            "Ugli fruit",
+            "Vanilla",
+            "Watermelon",
+            "Xigua",
+            "Yellow watermelon",
+            "Zucchini"
+        ];
+
+        const searchInput = document.getElementById("searchInput");
+        const suggestionsDropdown = document.getElementById("suggestionsDropdown");
+
+        // Debounce function to limit API calls
+        function debounce(func, delay) {
+            let timeoutId;
+            return function (...args) {
+                clearTimeout(timeoutId);
+                timeoutId = setTimeout(() => func.apply(this, args), delay);
+            };
+        }
+
+        // Function to filter suggestions
+        function filterSuggestions(query) {
+            return suggestions.filter(item =>
+                item.toLowerCase().includes(query.toLowerCase())
+            );
+        }
+
+        // Function to display suggestions
+        function displaySuggestions(filteredSuggestions) {
+            if (filteredSuggestions.length > 0) {
+                suggestionsDropdown.innerHTML = filteredSuggestions
+                    .map(item => {
+                        const regex = new RegExp(searchInput.value, "gi");
+                        const highlightedText = item.replace(regex, match => `<span class="highlight">${match}</span>`);
+                        return `<div class="suggestion-item">${highlightedText}</div>`;
+                    })
+                    .join("");
+                suggestionsDropdown.style.display = "block";
+            } else {
+                suggestionsDropdown.style.display = "none";
+            }
+        }
+
+        // Event listener for input
+        searchInput.addEventListener(
+            "input",
+            debounce(() => {
+                const query = searchInput.value.trim();
+                if (query) {
+                    const filteredSuggestions = filterSuggestions(query);
+                    displaySuggestions(filteredSuggestions);
+                } else {
+                    suggestionsDropdown.style.display = "none";
+                }
+            }, 300)
+        );
+
+        // Event listener for clicking suggestions
+        suggestionsDropdown.addEventListener("click", (e) => {
+            if (e.target.classList.contains("suggestion-item")) {
+                searchInput.value = e.target.textContent;
+                suggestionsDropdown.style.display = "none";
+            }
+        });
+
+        // Event listener for arrow key navigation
+        searchInput.addEventListener("keydown", (e) => {
+            const suggestionItems = suggestionsDropdown.querySelectorAll(".suggestion-item");
+            let currentIndex = Array.from(suggestionItems).findIndex(item =>
+                item.classList.contains("active")
+            );
+
+            if (e.key === "ArrowDown") {
+                e.preventDefault();
+                if (currentIndex < suggestionItems.length - 1) {
+                    suggestionItems.forEach(item => item.classList.remove("active"));
+                    suggestionItems[currentIndex + 1].classList.add("active");
+                }
+            } else if (e.key === "ArrowUp") {
+                e.preventDefault();
+                if (currentIndex > 0) {
+                    suggestionItems.forEach(item => item.classList.remove("active"));
+                    suggestionItems[currentIndex - 1].classList.add("active");
+                }
+            } else if (e.key === "Enter") {
+                const activeItem = suggestionsDropdown.querySelector(".suggestion-item.active");
+                if (activeItem) {
+                    searchInput.value = activeItem.textContent;
+                    suggestionsDropdown.style.display = "none";
+                }
+            }
+        });
+
+        // Dark mode toggle
+        function toggleDarkMode() {
+            const body = document.body;
+            const toggleButton = document.querySelector(".toggle-dark-mode");
+            body.classList.toggle("dark-mode");
+
+            // Change icon based on mode
+            if (body.classList.contains("dark-mode")) {
+                toggleButton.textContent = "☀️"; // Sun icon for light mode
+            } else {
+                toggleButton.textContent = "🌙"; // Moon icon for dark mode
+            }
+        }
+    </script>
+</body>
+</html>
